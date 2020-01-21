@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Url Checker{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+
+<ul class="list-group" id="list">
+    {% if links %}
+        {% for link in links %}
+            <li class="list-group-item">{{ link.url }}</li>
+        {% endfor %}
+    {% else %}
+        <li class="list-group-item">no urls</li>
+    {% endif %}
+</ul>
+
+{% block body %}{% endblock %}
+
+<script>
+    {% if links %}
+        window.setInterval(refreshUrls, {{ interval }});
+    {% endif %}
+    let lis = document.getElementsByTagName('li');
+
+    function refreshUrls() {
+        console.log('Refreshing');
+        $.ajax({
+            url: "/check",
+            type: 'GET',
+            success: function (json) {
+                if (json['status'] === 'ok') {
+                    let result = json.result;
+                    for (let i = 0; i < result.length; i++) {
+                        if (result[i].code !== 200) {
+                            markRed(result[i].url);
+                        } else if (result[i].code === 200) {
+                            markGreen(result[i].url);
+                        }
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function markRed(url) {
+        for (let i = 0; i < lis.length; i++) {
+            let elem = lis[i];
+            if (elem.innerHTML === url) {
+                elem.style.backgroundColor = 'red';
+            }
+        }
+    }
+
+    function markGreen(url) {
+        for (let i = 0; i < lis.length; i++) {
+            let elem = lis[i];
+            if (elem.innerHTML === url) {
+                elem.style.backgroundColor = 'green';
+            }
+        }
+    }
+</script>
+</body>
+</html>
